@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickBite | Premium Food Delivery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        body { font-family: 'Poppins', sans-serif; scroll-behavior: smooth; }
+        
+        .page { display: none; min-height: 90vh; }
+        .page.active { display: block; animation: fadeIn 0.4s ease-out; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: -5px;
+            right: -10px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 10px;
+        }
+
+        .stepper-item.active .step-counter { background-color: #f97316; color: white; }
+        .stepper-item.completed .step-counter { background-color: #22c55e; color: white; }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-orange-600 cursor-pointer" onclick="showPage('home')">QuickBite</h1>
+            <div class="space-x-6 flex items-center">
+                <button onclick="showPage('home')" class="hover:text-orange-600">Home</button>
+                <button onclick="showPage('menu')" class="hover:text-orange-600">Menu</button>
+                <button onclick="showPage('cart')" class="relative hover:text-orange-600">
+                    Cart <span id="cart-count" class="cart-badge">0</span>
+                </button>
+                <button id="nav-delivery" onclick="showPage('delivery')" class="hidden hover:text-orange-600">Status</button>
+                <div id="auth-links">
+                    <button onclick="showPage('login')" class="bg-orange-500 text-white px-4 py-2 rounded-lg">Login</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section id="home" class="page active">
+        <div class="container mx-auto px-6 py-20 flex flex-col md:flex-row items-center">
+            <div class="md:w-1/2">
+                <h2 class="text-5xl font-bold leading-tight mb-6">Delicious Food <br><span class="text-orange-500">Delivered Fast.</span></h2>
+                <p class="text-gray-600 mb-8 text-lg">Order from the best local restaurants with exclusive deals and lightning-fast delivery.</p>
+                <button onclick="showPage('menu')" class="bg-black text-white px-8 py-3 rounded-full text-lg hover:bg-gray-800 transition">Order Now</button>
+            </div>
+            <div class="md:w-1/2 mt-10 md:mt-0">
+                <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80" class="rounded-3xl shadow-2xl" alt="Hero Food">
+            </div>
+        </div>
+    </section>
+
+    <section id="menu" class="page container mx-auto px-6 py-10">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+            <h2 class="text-3xl font-bold">Our Menu</h2>
+            <div class="flex gap-4">
+                <input type="text" id="search-input" oninput="filterMenu()" placeholder="Search food..." class="border p-2 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none">
+                <select id="category-filter" onchange="filterMenu()" class="border p-2 rounded-lg">
+                    <option value="All">All Categories</option>
+                    <option value="Starters">Starters</option>
+                    <option value="Main Course">Main Course</option>
+                    <option value="Desserts">Desserts</option>
+                </select>
+            </div>
+        </div>
+        <div id="menu-grid" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            </div>
+    </section>
+
+    <section id="login" class="page container mx-auto px-6 py-20">
+        <div class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-xl">
+            <h2 class="text-2xl font-bold mb-6">Login to QuickBite</h2>
+            <input type="text" id="username" placeholder="Username" class="w-full border p-3 rounded-lg mb-4">
+            <input type="password" placeholder="Password" class="w-full border p-3 rounded-lg mb-6">
+            <button onclick="handleLogin()" class="w-full bg-orange-500 text-white py-3 rounded-lg font-bold">Sign In</button>
+        </div>
+    </section>
+
+    <section id="cart" class="page container mx-auto px-6 py-10">
+        <h2 class="text-3xl font-bold mb-8">Your Cart</h2>
+        <div id="cart-content" class="bg-white p-6 rounded-2xl shadow-lg">
+            </div>
+    </section>
+
+    <section id="delivery" class="page container mx-auto px-6 py-20 text-center">
+        <h2 class="text-3xl font-bold mb-12">Tracking Your Order</h2>
+        <div class="flex justify-between max-w-4xl mx-auto relative mb-20">
+            <div class="absolute top-1/2 left-0 w-full h-1 bg-gray-200 -translate-y-1/2 -z-10"></div>
+            <div id="progress-line" class="absolute top-1/2 left-0 h-1 bg-green-500 -translate-y-1/2 transition-all duration-1000 -z-10" style="width: 0%"></div>
+            
+            <div class="stepper-item flex flex-col items-center" id="step-0">
+                <div class="step-counter w-12 h-12 rounded-full border-4 border-white flex items-center justify-center bg-gray-300 shadow-md">1</div>
+                <p class="mt-2 font-semibold">Confirmed</p>
+            </div>
+            <div class="stepper-item flex flex-col items-center" id="step-1">
+                <div class="step-counter w-12 h-12 rounded-full border-4 border-white flex items-center justify-center bg-gray-300 shadow-md">2</div>
+                <p class="mt-2 font-semibold">Cooking</p>
+            </div>
+            <div class="stepper-item flex flex-col items-center" id="step-2">
+                <div class="step-counter w-12 h-12 rounded-full border-4 border-white flex items-center justify-center bg-gray-300 shadow-md">3</div>
+                <p class="mt-2 font-semibold">On Way</p>
+            </div>
+            <div class="stepper-item flex flex-col items-center" id="step-3">
+                <div class="step-counter w-12 h-12 rounded-full border-4 border-white flex items-center justify-center bg-gray-300 shadow-md">4</div>
+                <p class="mt-2 font-semibold">Delivered</p>
+            </div>
+        </div>
+        <p id="status-msg" class="text-xl italic text-gray-500">Waiting for kitchen confirmation...</p>
+    </section>
+
+    <script>
+        // --- DATA ---
+        const menuData = [
+            { id: 1, name: "Truffle Fries", price: 12, category: "Starters", image: "https://images.unsplash.com/photo-1573082818143-2410b74289aa?auto=format&fit=crop&w=400&q=80" },
+            { id: 2, name: "Classic Wagyu Burger", price: 18, category: "Main Course", image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80" },
+            { id: 3, name: "Lava Cake", price: 9, category: "Desserts", image: "https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=400&q=80" },
+            { id: 4, name: "Caesar Salad", price: 14, category: "Starters", image: "https://images.unsplash.com/photo-1550304943-4f24f54ddde9?auto=format&fit=crop&w=400&q=80" },
+            { id: 5, name: "Pan Seared Salmon", price: 24, category: "Main Course", image: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=400&q=80" }
+        ];
+
+        // --- STATE MANAGEMENT ---
+        let currentUser = JSON.parse(localStorage.getItem('user')) || null;
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+        // --- CORE LOGIC ---
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            window.scrollTo(0,0);
+        }
+
+        function updateUI() {
+            // Auth UI
+            const authLinks = document.getElementById('auth-links');
+            if(currentUser) {
+                authLinks.innerHTML = `<span class="mr-4">Hi, <b>${currentUser}</b></span> 
+                                       <button onclick="handleLogout()" class="text-red-500 underline">Logout</button>`;
+            } else {
+                authLinks.innerHTML = `<button onclick="showPage('login')" class="bg-orange-500 text-white px-4 py-2 rounded-lg">Login</button>`;
+            }
+
+            // Cart Count
+            document.getElementById('cart-count').innerText = cart.reduce((acc, item) => acc + item.qty, 0);
+            
+            renderMenu();
+            renderCart();
+        }
+
+        function renderMenu() {
+            const grid = document.getElementById('menu-grid');
+            const search = document.getElementById('search-input').value.toLowerCase();
+            const filter = document.getElementById('category-filter').value;
+
+            const filtered = menuData.filter(item => 
+                (filter === 'All' || item.category === filter) &&
+                item.name.toLowerCase().includes(search)
+            );
+
+            grid.innerHTML = filtered.map(item => `
+                <div class="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition transform hover:-translate-y-1">
+                    <img src="${item.image}" class="w-full h-48 object-cover">
+                    <div class="p-5">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-orange-500 uppercase">${item.category}</span>
+                            <span class="font-bold text-lg">$${item.price}</span>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-4">${item.name}</h3>
+                        <button onclick="addToCart(${item.id})" class="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition">Add to Cart</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterMenu() { renderMenu(); }
+
+        function addToCart(id) {
+            const item = menuData.find(i => i.id === id);
+            const exists = cart.find(i => i.id === id);
+            if(exists) {
+                exists.qty++;
+            } else {
+                cart.push({...item, qty: 1});
+            }
+            saveCart();
+            alert(`${item.name} added to cart!`);
+        }
+
+        function updateQty(id, delta) {
+            const item = cart.find(i => i.id === id);
+            item.qty += delta;
+            if(item.qty < 1) cart = cart.filter(i => i.id !== id);
+            saveCart();
+        }
+
+        function saveCart() {
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateUI();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cart-content');
+            if(cart.length === 0) {
+                container.innerHTML = `<div class="text-center py-10"><p class="text-gray-500 mb-4">Your cart is empty</p><button onclick="showPage('menu')" class="text-orange-500 font-bold">Go to Menu</button></div>`;
+                return;
+            }
+
+            let total = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
+
+            container.innerHTML = `
+                <div class="space-y-4">
+                    ${cart.map(item => `
+                        <div class="flex items-center justify-between border-b pb-4">
+                            <div class="flex items-center gap-4">
+                                <img src="${item.image}" class="w-16 h-16 rounded-lg object-cover">
+                                <div>
+                                    <h4 class="font-bold">${item.name}</h4>
+                                    <p class="text-gray-500 text-sm">$${item.price} each</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <button onclick="updateQty(${item.id}, -1)" class="w-8 h-8 rounded bg-gray-100">-</button>
+                                <span>${item.qty}</span>
+                                <button onclick="updateQty(${item.id}, 1)" class="w-8 h-8 rounded bg-gray-100">+</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                    <div class="pt-6 flex justify-between items-center">
+                        <span class="text-2xl font-bold">Total: $${total}</span>
+                        <button onclick="placeOrder()" class="bg-orange-500 text-white px-10 py-3 rounded-xl font-bold hover:bg-orange-600">Place Order</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function handleLogin() {
+            const user = document.getElementById('username').value;
+            if(!user) return alert("Enter a username!");
+            currentUser = user;
+            localStorage.setItem('user', JSON.stringify(user));
+            updateUI();
+            showPage('home');
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            localStorage.removeItem('user');
+            document.getElementById('nav-delivery').classList.add('hidden');
+            updateUI();
+            showPage('home');
+        }
+
+        function placeOrder() {
+            if(!currentUser) {
+                alert("Please login first to place an order!");
+                showPage('login');
+                return;
+            }
+            
+            cart = [];
+            saveCart();
+            document.getElementById('nav-delivery').classList.remove('hidden');
+            showPage('delivery');
+            startTracking();
+        }
+
+        function startTracking() {
+            let step = 0;
+            const msgs = [
+                "Chef has accepted your order!",
+                "Your food is sizzling in the pan!",
+                "Driver is speeding to your location!",
+                "Bon Appétit! Your food has arrived."
+            ];
+
+            const interval = setInterval(() => {
+                document.querySelectorAll('.stepper-item').forEach((el, idx) => {
+                    if(idx < step) el.classList.add('completed');
+                    if(idx === step) el.classList.add('active');
+                });
+                
+                document.getElementById('progress-line').style.width = `${(step / 3) * 100}%`;
+                document.getElementById('status-msg').innerText = msgs[step];
+
+                if(step >= 3) clearInterval(interval);
+                step++;
+            }, 4000);
+        }
+
+        // Init
+        updateUI();
+    </script>
+</body>
+</html>
