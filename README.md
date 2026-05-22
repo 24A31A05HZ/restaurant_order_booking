@@ -104,21 +104,3 @@ QuickBite/
 * Online payments
 * Order history page
 * Admin dashboard
-
----
-
-## 👨‍💻 Author
-
-Developed as a mini project for learning **Full Stack Development basics and UI interaction**.
-
----
-
-## 💡 Tip
-
-This project is great for:
-
-* College mini projects
-* Portfolio building
-* Placement demonstrations
-
----
